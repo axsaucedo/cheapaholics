@@ -57,21 +57,23 @@ io.sockets.on('connection', function(socket){
         var params = {};
         params.keywords = query.split();
 
+        //Calling ebay and amazon request asyncronously - execute function once both are done
+        async.series({
+                ebay: function(callback) {
+                    params = {};
+                    params.keywords = query.split(' ');
 
-        requestEbayQuery(query, params, null, function(error, result) {
-            if (error) throw error;
-
-            console.log(util.inspect(result, {depth: null}));
-
-            socket.emit('query_result', "its working");
-        })
-        requestAmazonQuery(query, function(error, result) {
-            if (error) throw error;
-
-            console.log(util.inspect(result, {depth:null}));
-
-            socket.emit('query_result', "Amazon too!");
-        });
+                    requestEbayQuery(query, params, null, callback);
+                },
+                amazon: function(callback) {
+                    requestAmazonQuery(query, callback);
+                }
+            }, // Now the results are passed to the following function as { ebay: x, amazon: y }
+            function(err, results) {
+                socket.emit('query_result', results.ebay);
+                socket.emit('query_result', results.amazon)
+            }
+        );
     });
 
     socket.on('disconnect', function(){
