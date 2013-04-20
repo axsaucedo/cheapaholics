@@ -1,6 +1,11 @@
 extends layout
 
 block content
-	div
-		a(id='sender')='Send a Message'
-		ul(id='receiver')
+    div(id='content')
+        form(id='searchForm')
+            input(id='searchBox', type='text', name='query')
+
+            input(id='searchButton', class='btn', type='submit', value='Submit')
+
+        div(id='results')
+            ul(id='receiver')

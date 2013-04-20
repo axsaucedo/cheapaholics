@@ -3,10 +3,17 @@ var connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
     , port = (process.env.PORT || 8081)
+    , async = require('async')
     , mysql = require('mysql')
     , ebay = require('ebay-api')
-    , util = require('util')
-    , amazon = require('apac');
+    , util = require('util');
+
+//Initiate the Amazon apac operation helper
+var amazon = new (require('apac').OperationHelper)({
+      awsId: 'AKIAJIOLE4OXTQDEAHSQ'
+    , awsSecret: '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'
+    , assocId: '9877-6481-2323'
+});
 
 //Setup Express
 var server = express.createServer();
@@ -39,20 +46,62 @@ server.error(function(err, req, res, next){
                 },status: 500 });
     }
 });
-server.listen( port);
+server.listen(port);
 
 //Setup Socket.IO
 var io = io.listen(server);
 io.sockets.on('connection', function(socket){
-  console.log('Client Connected');
-  socket.on('message', function(data){
-    socket.broadcast.emit('server_message',data);
-    socket.emit('server_message',data);
-  });
-  socket.on('disconnect', function(){
-    console.log('Client Disconnected.');
-  });
+    console.log('Client Connected');
+
+    socket.on('query_request', function(query){
+        var params = {};
+        params.keywords = query.split();
+
+
+        requestEbayQuery(query, params, null, function(error, result) {
+            if (error) throw error;
+
+            console.log(util.inspect(result, {depth: null}));
+
+            socket.emit('query_result', "its working");
+        })
+        requestAmazonQuery(query, function(error, result) {
+            if (error) throw error;
+
+            console.log(util.inspect(result, {depth:null}));
+
+            socket.emit('query_result', "Amazon too!");
+        });
+    });
+
+    socket.on('disconnect', function(){
+        console.log('Client Disconnected.');
+    });
 });
+
+//EBAY query
+function requestEbayQuery(query, params, filters, callback) {
+    ebay.ebayApiGetRequest({
+          serviceName: 'FindingService'
+        , opType: 'findItemsByKeywords'
+        , appId: 'HackaSot-b5e3-4d5e-b9dd-f5f631f9c60f'
+        , params: params
+        , filters: filters
+        , parser: ebay.parseItemsFromResponse
+    }
+    , callback);//(error, result)
+}
+
+//AMAZON query
+function requestAmazonQuery(query, callback) {
+    amazon.execute('ItemSearch', {
+            'Keywords': query
+        }
+        , callback//(error, result)
+    );
+}
+
+
 
 
 ///////////////////////////////////////////
@@ -71,7 +120,6 @@ server.get('/', function(req,res){
             }
   });
 });
-
 
 //A Route for Creating a 500 Error (Useful to keep around)
 server.get('/500', function(req, res){
