@@ -2,7 +2,11 @@
 var connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
-    , port = (process.env.PORT || 8081);
+    , port = (process.env.PORT || 8081)
+    , mysql = require('mysql')
+    , ebay = require('ebay-api')
+    , util = require('util')
+    , amazon = require('apac');
 
 //Setup Express
 var server = express.createServer();
