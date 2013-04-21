@@ -8,6 +8,9 @@ $(document).ready(function() {
     $('#sender').bind('click', function() {
     });
 
+    //While this variable is true, the form will not be submitted
+    var disabled = false;
+
     socket.on('query_result', function(data){
         $('#receiver li').remove();
         $('#receiver h1').remove();
@@ -19,14 +22,33 @@ $(document).ready(function() {
                 $('#receiver').append('<li>' + key + " -> " + JSON.stringify(data.items[i][key]) + '</li>');
             }
         }
+
+        //Re-enabling search button
+        $('#submit').removeAttr('disabled');
+        disabled = false;
     });
 
-    $('#searchForm').submit(function() {
-        var query = $('#searchBox').val();
+    $('#searchbox').submit(function() {
+        console.log("hello");
+        //Disabling submitting form
+        if(!disabled) {
+            $('#submit').attr('disabled', 'disabled');
+            disabled = true;
 
-        socket.emit('query_request', query);
+            var query = $('#search').val();
+
+            socket.emit('query_request', query);
+        }
+
         return false;
     });
 
-    socket.emit('query_request', "iphone");
+    $('#search').keyup( function() {
+        if($('#search').val() == '') {
+            $('#submit').attr('disabled', 'disabled');
+        } else {
+            $('#submit').removeAttr('disabled');
+        }
+    })
+//    socket.emit('query_request', "iphone");
 });

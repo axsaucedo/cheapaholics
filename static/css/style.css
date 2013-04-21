@@ -9,6 +9,11 @@
 /* ==========================================================================
    Base styles: opinionated defaults
    ========================================================================== */
+@font-face {
+    font-family: 'Urban';
+    src: url('fonts/UrbanJungleDEMO.otf') format('opentype');
+}
+
 
 html,
 button,
@@ -21,6 +26,9 @@ textarea {
 body {
     font-size: 1em;
     line-height: 1.4;
+    margin-left:auto;
+    margin-right:auto;
+    text-align: left;
 }
 
 /*
@@ -90,11 +98,140 @@ textarea {
 }
 
 /* ==========================================================================
-   Author's custom styles
+   Main Layout Styles
    ========================================================================== */
 
+#wrapper {
+
+}
+
+#header {
+    background-image: url('../images/background00.jpg');
+    background-position: 0px -800px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    width: 100%;
+    height: 300px;
+    min-width: 500px;
+    text-align: center;
+}
+#header-image {
+    background-image: url('../images/city-white.png');
+    background-position: 0px 200px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    font-family: 'Urban';
+    height: 300px;
+    padding-top: 40px;
+}
+
+#header-image img {
+    width: 700px;
+}
 
 
+/* ==========================================================================
+   Search box
+   ========================================================================== */
+
+#search-div {
+    padding-top: 10px;
+}
+
+#searchbox
+{
+    background: #eaf8fc;
+    background-image: -moz-linear-gradient(#fff, #d4e8ec);
+    background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #000),color-stop(1, #213d70));
+
+    -moz-border-radius: 35px;
+    border-radius: 35px;
+
+    border-width: 1px;
+    border-color: #c4d9df #a4c3ca #83afb7;
+    width: 700px;
+    height: 35px;
+    padding: 10px;
+    margin: 0px auto 50px;
+    overflow: hidden; /* Clear floats */
+}
+#search, #submit
+{
+    float: left;
+}
+
+#search
+{
+    padding: 5px 9px;
+    height: 23px;
+    width: 575px;
+    border: 1px solid #a4c3ca;
+    font: normal 13px 'trebuchet MS', arial, helvetica;
+    background: #f1f1f1;
+
+    -moz-border-radius: 50px 3px 3px 50px;
+    border-radius: 50px 3px 3px 50px;
+    -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) inset, 0 1px 0 rgba(255, 255, 255, 1);
+    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) inset, 0 1px 0 rgba(255, 255, 255, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) inset, 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* ----------------------- */
+
+#submit
+{
+    background: #6cbb6b;
+    background-image: -moz-linear-gradient(#95d788, #6cbb6b);
+    background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #9c9c9c),color-stop(1, #fff));
+
+    -moz-border-radius: 3px 50px 50px 3px;
+    border-radius: 3px 50px 50px 3px;
+
+    border-width: 1px;
+
+    -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+
+    height: 35px;
+    margin: 0 0 0 10px;
+    padding: 0;
+    width: 90px;
+    cursor: pointer;
+    font: bold 14px Arial, Helvetica;
+    color: #23441e;
+
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+#submit:hover
+{
+    background: #616161;
+    background-image: -moz-linear-gradient(#616161, #c6c6c6);
+    border-color: #616161 #616161 #616161;
+    background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #616161),color-stop(1, #fff));
+}
+
+#submit:active
+{
+    background: #616161;
+    background-image: -moz-linear-gradient(#616161, #c6c6c6);
+    border-color: #616161 #616161 #616161;
+    background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #616161),color-stop(1, #fff));
+}
+
+#submit[disabled=disabled]
+{
+    background: #616161;
+    background-image: -moz-linear-gradient(#616161, #c6c6c6);
+    border-color: #616161 #616161 #616161;
+    background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #424141),color-stop(1, #c6c6c6));
+}
+
+#submit::-moz-focus-inner
+{
+    border: 0;  /* Small centering fix for Firefox */
+}
 
 
 

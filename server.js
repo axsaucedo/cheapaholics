@@ -2,7 +2,7 @@
 var connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
-    , port = (process.env.PORT || 80)
+    , port = (process.env.PORT || 8081)
     , async = require('async')
     , mysql = require('mysql')
     , ebay = require('ebay-api')
@@ -61,10 +61,12 @@ io.sockets.on('connection', function(socket){
         async.series({
                 ebay: function(callback) {
                     params = {};
-                    params.keywords = query.split(' ');
+                    params.keywords = query.split(' ').map(function(x) { return x.toString()});
                     params['GLOBAL-ID'] = 'EBAY-GB';
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
+
+                    console.log(params.keywords);
 
                     filters = {};
                     filters.itemFilter = [
@@ -90,7 +92,6 @@ io.sockets.on('connection', function(socket){
                     };
                 }
                 composite.sort(idComparison('minprice'));
-                console.log(composite);
 
                 var finalResult = {
                       ebayquery: results.ebay.queryUrl
