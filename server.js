@@ -64,11 +64,14 @@ io.sockets.on('connection', function(socket){
                     params.keywords = query.split(' ').map(function(x) {
                         if(/^\d+$/.test(x))
                             return "'" + x + "'";
+                        else
+                            return x;
                     });
                     params['GLOBAL-ID'] = 'EBAY-GB';
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
 
+                    console.log(query);
                     console.log(params.keywords);
 
                     filters = {};
@@ -182,23 +185,24 @@ function standardizeAmazonResults(error, results, callback){
 
     allItems.forEach(function(item) {
         var ia = item['ItemAttributes'][0];
-        var os = item['OfferSummary'][0];
-        var newit = os.hasOwnProperty('LowestNewPrice') ? os['LowestNewPrice'][0]['Amount'][0] : "";
-        var used = os.hasOwnProperty('LowestUsedPrice') ? os['LowestUsedPrice'][0]['Amount'][0] : "";
-        var refurb = os.hasOwnProperty('LowestRefurbishedPrice') ? os['LowestRefurbishedPrice'][0]['Amount'][0] : "";
+        var os = item.hasOwnProperty('OfferSummary') ? item['OfferSummary'][0] : "";
+        var newit = os.hasOwnProperty('LowestNewPrice') ? os['LowestNewPrice'][0]['Amount'][0]/100.0 : "";
+        var used = os.hasOwnProperty('LowestUsedPrice') ? os['LowestUsedPrice'][0]['Amount'][0]/100.0 : "";
+        var refurb = os.hasOwnProperty('LowestRefurbishedPrice') ? os['LowestRefurbishedPrice'][0]['Amount'][0]/100.0 : "";
         var minprice = (refurb ? (used ? Math.min(refurb, used) : Math.min(newit, refurb)) : (used ? Math.min(used, newit) : newit) );
-        minprice = minprice / 100;
+        var image = item.hasOwnProperty('MediumImage')? item['MediumImage'][0].URL : "";
+        minprice = minprice;
         var sItem = {
               emarket: 'amazon'
             , itemUrl: item['DetailPageURL']
             , itemId: item['ASIN']
             , itemTitle: ia['Title']
-            , imageUrl: item['MediumImage']
+            , imageUrl: image
             , minprice: minprice
             , price: {
-                  new: newit
-                , used: used
+                  used: used
                 , refurbished: refurb
+                , new: newit
             }
         }
         standardized.push(sItem);

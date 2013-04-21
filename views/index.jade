@@ -15,4 +15,30 @@ block header
 block content
     div(id='content')
         div(id='results')
-            ul(id='receiver')
+            div(id='receiver')
+
+    div(class='row-fluid', id='welcome')
+        div(id='welcome-left', class='span6')
+            div(id='welcome-left-content', class='round-shadow')
+                img(id='welcome-image', src='/images/welcome.png')
+                p
+                    <br>
+                    img(width='150px', src='/images/cheapaholics-title.png')
+                    |  gives you the ability to get search results from
+                    |  all your favourite e-commerce websites with a simple click.
+                p
+                    <br>
+                    |  Why don't you give it a try?
+                p
+                    <br>
+                    |  Just insert some keywords and watch the magic!
+
+        div(id='welcome-right', class='span6')
+            div.round-shadow#welcome-right-content
+                p#affiliate-title Catalogue
+                br
+                ul#affiliate-list
+                    li
+                        img.affi-image(src='/img/amazon-m.jpg')
+                    li
+                        img.affi-image(src='/img/ebay-m.jpg')

@@ -13,6 +13,10 @@
     font-family: 'Urban';
     src: url('fonts/UrbanJungleDEMO.otf') format('opentype');
 }
+@font-face {
+    font-family: 'NexaBold';
+    src: url('fonts/NexaBold.otf') format('opentype');
+}
 
 
 html,
@@ -127,6 +131,102 @@ textarea {
 
 #header-image img {
     width: 700px;
+}
+
+/* ==========================================================================
+   Welcome section
+   ========================================================================== */
+#welcome {
+    margin: auto auto;
+    text-align: center;
+    margin-top: 20px;
+}
+
+#welcome-image {
+    width: 300px;
+}
+
+#welcome-left, #welcome-right, #welcome-left-content, #welcome-right-content {
+    padding: 0px 40px 40px 40px;
+    height:260px;
+}
+#welcome-left-content p {
+    text-align: left;
+    font-family: NexaBold;
+    color: gray;
+    font-size: 1.2em;
+    line-height: 1.5em;
+}
+#affiliate-title {
+    font-family: Urban;
+    text-shadow: -2px 0 #e0e0e0, 0 2px #e0e0e0, 2px 0 #e0e0e0, 0 -2px #e0e0e0;
+    font-size: 4.4em;
+    padding-top: 20px;
+    color: #213d70;
+}
+.affi-image {
+    width: 150px;
+}
+#affiliate-list {
+    list-style: none;
+}
+
+.round-shadow {
+    border-radius: 15px;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    -webkit-box-shadow: 10px 10px 5px #888;
+}
+
+#receiver {
+    width: 800px;
+    margin-left: 40px;
+    overflow: hidden;
+}
+#receiver div {
+
+}
+.entry-content {
+    border-bottom: 2px double #d3d3d3;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    height: 230px;
+    overflow: hidden;
+}
+.entry-title {
+    width: 80%;
+    height: 50px;
+    font-family: NexaBold;
+    font-size: 1.3em;
+    float:left;
+}
+.entry-emarket {
+    width: 140px;
+    height: 60px;
+    text-align: center;
+    float: right;
+}
+.entry-market img {
+    heigth: 100%;
+}
+.entry-image  {
+    background-size: auto 100%;
+    width:250px;
+    float: left;
+    height:170px;
+}
+.entry-body {
+    width: 530px;
+    height: 150px;
+    float:right;
+    position: relative;
+}
+.entry-price {
+    position: absolute;
+    bottom:30px;
+}
+.price {
+    padding-right: 15px;
 }
 
 
