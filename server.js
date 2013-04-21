@@ -2,7 +2,7 @@
 var connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
-    , port = (process.env.PORT || 8081)
+    , port = (process.env.PORT || 80)
     , async = require('async')
     , mysql = require('mysql')
     , ebay = require('ebay-api')
@@ -66,11 +66,10 @@ io.sockets.on('connection', function(socket){
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
 
-                    filters = {}
+                    filters = {};
                     filters.itemFilter = [
-                        new ebay.ItemFilter("listingType", "FixedPrice")
+                        new ebay.ItemFilter("ListingType", ["FixedPrice"])
                     ];
-
                     requestEbayQuery(query, params, filters, callback);
                 },
                 amazon: function(callback) {
@@ -82,8 +81,24 @@ io.sockets.on('connection', function(socket){
             function(error, results) {
                 if (error) throw error;
 
-                socket.emit('query_result', results.ebay);
-                socket.emit('query_result', results.amazon)
+                var composite = results.amazon.items.concat(results.ebay.items);
+
+                //Sorting object by price
+                function idComparison(property) {
+                    return function (a, b) {
+                        return parseInt(a[property]) - parseInt(b[property]);
+                    };
+                }
+                composite.sort(idComparison('minprice'));
+                console.log(composite);
+
+                var finalResult = {
+                      ebayquery: results.ebay.queryUrl
+                    , amazonquery: results.amazon.queryUrl
+                    , items: composite
+                }
+//                console.log(composite, {depth: 1});
+                socket.emit('query_result', finalResult);
             }
         );
     });
@@ -129,22 +144,30 @@ function requestAmazonQuery(query, callback) {
 //         Standarize Results            //
 //Ebay
 function standardizeEbayResults(error, results, callback){
+    var queryUrl = results.queryUrl;
     var standardized = [];
-    results.forEach(function(result) {
-        item = result;
+
+    results.forEach(function(item) {
+        var priceObj = item['sellingStatus']['currentPrice'];
+        var priceKey = Object.keys(item['sellingStatus']['currentPrice'])[0];
+        var minprice = priceObj[priceKey];
+
         var sItem = {
               emarket: 'ebay'
-            , queryUrl: ''
             , itemUrl: item['viewItemURL']
             , itemId: item['itemId']
             , itemTitle: item['title']
             , imageUrl: item['galleryURL']
+            , minprice: minprice
             , price: item['sellingStatus']['currentPrice']
         }
         standardized.push(sItem);
     });
-    console.log(util.inspect(results));
-    callback(error, standardized);
+    var standardizedItems = {
+          queryUrl: queryUrl
+        , items : standardized
+    }
+    callback(error, standardizedItems);
 }
 //Amazon
 function standardizeAmazonResults(error, results, callback){
@@ -156,22 +179,31 @@ function standardizeAmazonResults(error, results, callback){
     allItems.forEach(function(item) {
         var ia = item['ItemAttributes'][0];
         var os = item['OfferSummary'][0];
+        var newit = os.hasOwnProperty('LowestNewPrice') ? os['LowestNewPrice'][0]['Amount'][0] : "";
+        var used = os.hasOwnProperty('LowestUsedPrice') ? os['LowestUsedPrice'][0]['Amount'][0] : "";
+        var refurb = os.hasOwnProperty('LowestRefurbishedPrice') ? os['LowestRefurbishedPrice'][0]['Amount'][0] : "";
+        var minprice = (refurb ? (used ? Math.min(refurb, used) : Math.min(newit, refurb)) : (used ? Math.min(used, newit) : newit) );
+        minprice = minprice / 100;
         var sItem = {
               emarket: 'amazon'
-            , queryUrl: queryUrl
             , itemUrl: item['DetailPageURL']
             , itemId: item['ASIN']
             , itemTitle: ia['Title']
             , imageUrl: item['MediumImage']
+            , minprice: minprice
             , price: {
-                  new: os['LowestNewPrice'][0]['Amount']
-                , used: os['LowestUsedPrice'][0]['Amount']
-                , refurbished: os['LowestRefurbishedPrice'][0]['Amount']
+                  new: newit
+                , used: used
+                , refurbished: refurb
             }
         }
         standardized.push(sItem);
-    })
-    callback(error, standardized);
+    });
+    var standardizedItems = {
+          queryUrl: queryUrl
+        , items : standardized
+    }
+    callback(error, standardizedItems);
 }
 
 ///////////////////////////////////////////
