@@ -21,4 +21,5 @@ $(document).ready(function() {
         return false;
     });
 
+    socket.emit('query_request', "iphone");
 });

@@ -62,14 +62,24 @@ io.sockets.on('connection', function(socket){
                 ebay: function(callback) {
                     params = {};
                     params.keywords = query.split(' ');
+                    params['GLOBAL-ID'] = 'EBAY-GB';
 
-                    requestEbayQuery(query, params, null, callback);
+                    filters = {}
+                    filters.itemFilter = [
+                        new ebay.ItemFilter("listingType", "FixedPrice")
+                    ];
+
+                    requestEbayQuery(query, params, filters, callback);
                 },
                 amazon: function(callback) {
+                    amazon.endPoint = 'ecs.amazonaws.co.uk';
+
                     requestAmazonQuery(query, callback);
                 }
             }, // Now the results are passed to the following function as { ebay: x, amazon: y }
-            function(err, results) {
+            function(error, results) {
+                if (error) throw error;
+
                 socket.emit('query_result', results.ebay);
                 socket.emit('query_result', results.amazon)
             }
@@ -81,36 +91,91 @@ io.sockets.on('connection', function(socket){
     });
 });
 
+
+///////////////////////////////////////////
+//          Execute Queries              //
 //EBAY query
 function requestEbayQuery(query, params, filters, callback) {
     ebay.ebayApiGetRequest({
-          serviceName: 'FindingService'
-        , opType: 'findItemsByKeywords'
-        , appId: 'HackaSot-b5e3-4d5e-b9dd-f5f631f9c60f'
-        , params: params
-        , filters: filters
-        , parser: ebay.parseItemsFromResponse
-    }
-    , callback);//(error, result)
+              serviceName: 'FindingService'
+            , opType: 'findItemsByKeywords'
+            , appId: 'HackaSot-b5e3-4d5e-b9dd-f5f631f9c60f'
+            , params: params
+            , filters: filters
+            , parser: ebay.parseItemsFromResponse
+        }
+        , function (error, results) {
+            if (error) throw error;
+            standarizeEbayResults(error, results, callback);
+        }
+    );//(error, result)
 }
-
 //AMAZON query
 function requestAmazonQuery(query, callback) {
     amazon.execute('ItemSearch', {
-            'Keywords': query
+              'Keywords': query
+            , 'ResponseGroup': 'Medium'
+            , 'SearchIndex': 'All'
         }
-        , callback//(error, result)
+        , function(error, results) {
+            if (error) throw error;
+            standarizeAmazonResults(error, results, callback);
+        }
     );
 }
+///////////////////////////////////////////
+//         Standarize Results            //
+//Ebay
+function standarizeEbayResults(error, results, callback){
+    var standarized = [];
+    results.forEach(function(result) {
+        item = result;
+        var sItem = {
+              emarket: 'ebay'
+            , queryUrl: ''
+            , itemUrl: item['viewItemURL']
+            , itemId: item['itemId']
+            , itemTitle: item['title']
+            , imageUrl: item['galleryURL']
+            , price: {
+                currentPrice: item['sellingStatus']['currentPrice']['GBP']
+            }
+        }
+        standarized.push(sItem);
+    });
+    callback(error, standarized);
+}
+//Amazon
+function standarizeAmazonResults(error, results, callback){
+    var queryUrl = results.ItemSearchResponse.Items[0].MoreSearchResultsUrl[0];
+    allItems = results.ItemSearchResponse.Items[0].Item;
 
+    var standarized = [];
 
-
+    allItems.forEach(function(item) {
+        var ia = item['ItemAttributes'][0];
+        var os = item['OfferSummary'][0];
+        var sItem = {
+              emarket: 'amazon'
+            , queryUrl: queryUrl
+            , itemUrl: item['DetailPageURL']
+            , itemId: item['ASIN']
+            , itemTitle: ia['Title']
+            , imageUrl: item['MediumImage']
+            , price: {
+                  new: os['LowestNewPrice'][0]['Amount']
+                , used: os['LowestUsedPrice'][0]['Amount']
+                , refurbished: os['LowestRefurbishedPrice'][0]['Amount']
+            }
+        }
+        standarized.push(sItem);
+    })
+    callback(error, standarized);
+}
 
 ///////////////////////////////////////////
 //              Routes                   //
 ///////////////////////////////////////////
-
-/////// ADD ALL YOUR ROUTES HERE  /////////
 
 server.get('/', function(req,res){
   res.render('index.jade', {
