@@ -12,7 +12,8 @@
         "async": "0.2.7",
         "socket.io": "0.8.7",
         "apac":  "latest",
-        "ebay-api": "0.1.1"
+        "ebay-api": "0.1.1",
+        "forever" : "0.10.6"
     },
     "devDependencies": {
         "vows": "0.5.x",

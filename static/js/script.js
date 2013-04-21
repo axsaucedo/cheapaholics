@@ -15,6 +15,10 @@ $(document).ready(function() {
         $('#receiver div').remove();
 //        $('#receiver').append(JSON.stringify(data));
 
+        if(data.items.length < 1) {
+            $('#receiver div').append('<h1>No Results</h1>');
+        }
+
         for(var i = 0; i < data.items.length; i++) {
             var item = data.items[i];
             var itemId = item['itemId'];

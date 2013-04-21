@@ -2,6 +2,7 @@
 var connect = require('connect')
     , express = require('express')
     , io = require('socket.io')
+    , fs = require('fs')
     , port = (process.env.PORT || 8081)
     , async = require('async')
     , mysql = require('mysql')
@@ -30,19 +31,19 @@ server.configure(function(){
 //setup the errors
 server.error(function(err, req, res, next){
     if (err instanceof NotFound) {
-        res.render('404.jade', { locals: { 
+        res.render('404.jade', { locals: {
                   title : '404 - Not Found'
                  ,description: ''
                  ,author: ''
-                 ,analyticssiteid: 'XXXXXXX' 
+                 ,analyticssiteid: 'XXXXXXX'
                 },status: 404 });
     } else {
-        res.render('500.jade', { locals: { 
+        res.render('500.jade', { locals: {
                   title : 'The Server Encountered an Error'
                  ,description: ''
                  ,author: ''
                  ,analyticssiteid: 'XXXXXXX'
-                 ,error: err 
+                 ,error: err
                 },status: 500 });
     }
 });
@@ -55,18 +56,33 @@ io.sockets.on('connection', function(socket){
 
     socket.on('query_request', function(query){
         var params = {};
-        params.keywords = query.split();
 
         //Calling ebay and amazon request asyncronously - execute function once both are done
         async.series({
                 ebay: function(callback) {
                     params = {};
+                    fs.appendFile('queries', query + '\r\n', function (err) {
+                        fs.appendFile('errors', err, function (err) {
+                             if (err) throw err;
+                        });
+                        if (err) throw err;
+                    });
+                    query = query.replace(/[^A-Za-z ]/g,'');
                     params.keywords = query.split(' ').map(function(x) {
+                        if(x.length < 2) {
+                            return;
+                        }
                         if(/^\d+$/.test(x))
                             return "'" + x + "'";
-                        else
+                        else if (x != '')
                             return x;
                     });
+                    var un = params.keywords.indexOf(undefined);
+                    while (un != -1) {
+                        console.log(un);
+                        params.keywords.splice(un, 1);
+                        un = params.keywords.indexOf(undefined)
+                    }
                     params['GLOBAL-ID'] = 'EBAY-GB';
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
@@ -87,7 +103,12 @@ io.sockets.on('connection', function(socket){
                 }
             }, // Now the results are passed to the following function as { ebay: x, amazon: y }
             function(error, results) {
-                if (error) throw error;
+                if (error) {
+                    fs.appendFile('errors', error, function (error) {
+                        if (error) throw error;
+                    });
+                    if (error) throw error;
+                }
 
                 var composite = results.amazon.items.concat(results.ebay.items);
 
@@ -129,7 +150,12 @@ function requestEbayQuery(query, params, filters, callback) {
             , parser: ebay.parseItemsFromResponse
         }
         , function (error, results) {
-            if (error) throw error;
+            if (error) {
+                fs.appendFile('errors', error, function (error) {
+                    if (error)  throw error;
+                });
+                if (error) throw error;
+            }
             standardizeEbayResults(error, results, callback);
         }
     );//(error, result)
@@ -142,7 +168,12 @@ function requestAmazonQuery(query, callback) {
             , 'SearchIndex': 'All'
         }
         , function(error, results) {
-            if (error) throw error;
+            if (error) {
+                fs.appendFile('errors', error, function (error) {
+                    if (error) throw error;
+                });
+                if (error) throw error;
+            }
             standardizeAmazonResults(error, results, callback);
         }
     );
@@ -153,23 +184,24 @@ function requestAmazonQuery(query, callback) {
 function standardizeEbayResults(error, results, callback){
     var queryUrl = results.queryUrl;
     var standardized = [];
+    if(results) {
+        results.forEach(function(item) {
+            var priceObj = item['sellingStatus']['currentPrice'];
+            var priceKey = Object.keys(item['sellingStatus']['currentPrice'])[0];
+            var minprice = priceObj[priceKey];
 
-    results.forEach(function(item) {
-        var priceObj = item['sellingStatus']['currentPrice'];
-        var priceKey = Object.keys(item['sellingStatus']['currentPrice'])[0];
-        var minprice = priceObj[priceKey];
-
-        var sItem = {
-              emarket: 'ebay'
-            , itemUrl: item['viewItemURL']
-            , itemId: item['itemId']
-            , itemTitle: item['title']
-            , imageUrl: item['galleryURL']
-            , minprice: minprice
-            , price: item['sellingStatus']['currentPrice']
-        }
-        standardized.push(sItem);
-    });
+            var sItem = {
+                  emarket: 'ebay'
+                , itemUrl: item['viewItemURL']
+                , itemId: item['itemId']
+                , itemTitle: item['title']
+                , imageUrl: item['galleryURL']
+                , minprice: minprice
+                , price: item['sellingStatus']['currentPrice']
+            }
+            standardized.push(sItem);
+        });
+    }
     var standardizedItems = {
           queryUrl: queryUrl
         , items : standardized
@@ -179,34 +211,37 @@ function standardizeEbayResults(error, results, callback){
 //Amazon
 function standardizeAmazonResults(error, results, callback){
     var queryUrl = results.ItemSearchResponse.Items[0].MoreSearchResultsUrl[0];
-    allItems = results.ItemSearchResponse.Items[0].Item;
 
     var standardized = [];
 
-    allItems.forEach(function(item) {
-        var ia = item['ItemAttributes'][0];
-        var os = item.hasOwnProperty('OfferSummary') ? item['OfferSummary'][0] : "";
-        var newit = os.hasOwnProperty('LowestNewPrice') ? os['LowestNewPrice'][0]['Amount'][0]/100.0 : "";
-        var used = os.hasOwnProperty('LowestUsedPrice') ? os['LowestUsedPrice'][0]['Amount'][0]/100.0 : "";
-        var refurb = os.hasOwnProperty('LowestRefurbishedPrice') ? os['LowestRefurbishedPrice'][0]['Amount'][0]/100.0 : "";
-        var minprice = (refurb ? (used ? Math.min(refurb, used) : Math.min(newit, refurb)) : (used ? Math.min(used, newit) : newit) );
-        var image = item.hasOwnProperty('MediumImage')? item['MediumImage'][0].URL : "";
-        minprice = minprice;
-        var sItem = {
-              emarket: 'amazon'
-            , itemUrl: item['DetailPageURL']
-            , itemId: item['ASIN']
-            , itemTitle: ia['Title']
-            , imageUrl: image
-            , minprice: minprice
-            , price: {
-                  used: used
-                , refurbished: refurb
-                , new: newit
+    allItems = results.ItemSearchResponse.Items[0].Item;
+
+    if(allItems) {
+        allItems.forEach(function(item) {
+            var ia = item['ItemAttributes'][0];
+            var os = item.hasOwnProperty('OfferSummary') ? item['OfferSummary'][0] : "";
+            var newit = os.hasOwnProperty('LowestNewPrice') ? os['LowestNewPrice'][0]['Amount'][0]/100.0 : "";
+            var used = os.hasOwnProperty('LowestUsedPrice') ? os['LowestUsedPrice'][0]['Amount'][0]/100.0 : "";
+            var refurb = os.hasOwnProperty('LowestRefurbishedPrice') ? os['LowestRefurbishedPrice'][0]['Amount'][0]/100.0 : "";
+            var minprice = (refurb ? (used ? Math.min(refurb, used) : Math.min(newit, refurb)) : (used ? Math.min(used, newit) : newit) );
+            var image = item.hasOwnProperty('MediumImage')? item['MediumImage'][0].URL : "";
+            minprice = minprice;
+            var sItem = {
+                  emarket: 'amazon'
+                , itemUrl: item['DetailPageURL']
+                , itemId: item['ASIN']
+                , itemTitle: ia['Title']
+                , imageUrl: image
+                , minprice: minprice
+                , price: {
+                      used: used
+                    , refurbished: refurb
+                    , new: newit
+                }
             }
-        }
-        standardized.push(sItem);
-    });
+            standardized.push(sItem);
+        });
+    }
     var standardizedItems = {
           queryUrl: queryUrl
         , items : standardized
