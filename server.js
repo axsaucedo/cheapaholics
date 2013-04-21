@@ -63,6 +63,8 @@ io.sockets.on('connection', function(socket){
                     params = {};
                     params.keywords = query.split(' ');
                     params['GLOBAL-ID'] = 'EBAY-GB';
+                    params.outputSelector = [ 'AspectHistogram' ];
+                    params['paginationInput.entriesPerPage'] = 10;
 
                     filters = {}
                     filters.itemFilter = [
@@ -106,7 +108,7 @@ function requestEbayQuery(query, params, filters, callback) {
         }
         , function (error, results) {
             if (error) throw error;
-            standarizeEbayResults(error, results, callback);
+            standardizeEbayResults(error, results, callback);
         }
     );//(error, result)
 }
@@ -119,15 +121,15 @@ function requestAmazonQuery(query, callback) {
         }
         , function(error, results) {
             if (error) throw error;
-            standarizeAmazonResults(error, results, callback);
+            standardizeAmazonResults(error, results, callback);
         }
     );
 }
 ///////////////////////////////////////////
 //         Standarize Results            //
 //Ebay
-function standarizeEbayResults(error, results, callback){
-    var standarized = [];
+function standardizeEbayResults(error, results, callback){
+    var standardized = [];
     results.forEach(function(result) {
         item = result;
         var sItem = {
@@ -137,20 +139,19 @@ function standarizeEbayResults(error, results, callback){
             , itemId: item['itemId']
             , itemTitle: item['title']
             , imageUrl: item['galleryURL']
-            , price: {
-                currentPrice: item['sellingStatus']['currentPrice']['GBP']
-            }
+            , price: item['sellingStatus']['currentPrice']
         }
-        standarized.push(sItem);
+        standardized.push(sItem);
     });
-    callback(error, standarized);
+    console.log(util.inspect(results));
+    callback(error, standardized);
 }
 //Amazon
-function standarizeAmazonResults(error, results, callback){
+function standardizeAmazonResults(error, results, callback){
     var queryUrl = results.ItemSearchResponse.Items[0].MoreSearchResultsUrl[0];
     allItems = results.ItemSearchResponse.Items[0].Item;
 
-    var standarized = [];
+    var standardized = [];
 
     allItems.forEach(function(item) {
         var ia = item['ItemAttributes'][0];
@@ -168,9 +169,9 @@ function standarizeAmazonResults(error, results, callback){
                 , refurbished: os['LowestRefurbishedPrice'][0]['Amount']
             }
         }
-        standarized.push(sItem);
+        standardized.push(sItem);
     })
-    callback(error, standarized);
+    callback(error, standardized);
 }
 
 ///////////////////////////////////////////
