@@ -61,7 +61,10 @@ io.sockets.on('connection', function(socket){
         async.series({
                 ebay: function(callback) {
                     params = {};
-                    params.keywords = query.split(' ').map(function(x) { return x.toString()});
+                    params.keywords = query.split(' ').map(function(x) {
+                        if(/^\d+$/.test(x))
+                            return "'" + x + "'";
+                    });
                     params['GLOBAL-ID'] = 'EBAY-GB';
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
