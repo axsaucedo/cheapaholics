@@ -1,0 +1,1 @@
+sudo ./node_modules/forever/bin/forever start -al /home/bitnami/Cheapaholics/cheapaholics/logs/forever.log -ao /home/bitnami/Cheapaholics/cheapaholics/logs/serverout.log -ae /home/bitnami/Cheapaholics/cheapaholics/logs/servererror.log server.js

@@ -1,0 +1,1 @@
+sudo ./node_modules/forever/bin/forever restart 0
