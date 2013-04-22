@@ -94,5 +94,5 @@ $(document).ready(function() {
             $('#submit').removeAttr('disabled');
         }
     })
-//    socket.emit('query_request', "iphone");
+
 });

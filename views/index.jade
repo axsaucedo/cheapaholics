@@ -13,14 +13,16 @@ block header
 
 
 block content
-    div(id='content')
-        div(id='results')
-            div(id='receiver')
+    div#container
+        div#id
+    div#content
+        div#results
+            div#receiver
 
-    div(class='row-fluid', id='welcome')
-        div(id='welcome-left', class='span6')
-            div(id='welcome-left-content', class='round-shadow')
-                img(id='welcome-image', src='/images/welcome.png')
+    div.row-fluid#welcome
+        div.span6#welcome-left
+            div.round-shadow#welcome-left-content
+                img#welcome-image(src='/images/welcome.png')
                 p
                     <br>
                     img(width='150px', src='/images/cheapaholics-title.png')
@@ -33,7 +35,7 @@ block content
                     <br>
                     |  Just insert some keywords and watch the magic!
 
-        div(id='welcome-right', class='span6')
+        div.span6#welcome-right
             div.round-shadow#welcome-right-content
                 p#affiliate-title Catalogue
                 br
@@ -51,3 +53,48 @@ block content
             p One fine body
         div.modal-footer
 
+    script
+        //load loader
+        var loader = {
+
+            width: 100,
+            height: 100,
+
+            stepsPerFrame: 1,
+            trailLength: 1,
+            pointDistance: .02,
+            fps: 30,
+
+            fillColor: '#05E2FF',
+
+            step: function(point, index) {
+
+                this._.beginPath();
+                this._.moveTo(point.x, point.y);
+                this._.arc(point.x, point.y, index * 7, 0, Math.PI*2, false);
+                this._.closePath();
+                this._.fill();
+
+            },
+
+            path: [
+                ['arc', 50, 50, 30, 0, 360]
+            ]
+
+        }
+
+        var d, a, container = document.getElementById('id');
+
+
+        d = document.createElement('div');
+        d.className = 'l';
+
+        a = new Sonic(loader);
+
+        d.appendChild(a.canvas);
+        container.appendChild(d);
+
+        a.canvas.style.marginTop = (150 - a.fullHeight) / 2 + 'px';
+        a.canvas.style.marginLeft = (150 - a.fullWidth) / 2 + 'px';
+
+        a.play();

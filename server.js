@@ -104,7 +104,7 @@ io.sockets.on('connection', function(socket){
             }, // Now the results are passed to the following function as { ebay: x, amazon: y }
             function(error, results) {
                 if (error) {
-                    fs.appendFile('errors', error, function (error) {
+                    fs.appendFile('errors', error+'\n\r', function (error) {
                         if (error) throw error;
                     });
                     if (error) throw error;
@@ -256,9 +256,9 @@ function standardizeAmazonResults(error, results, callback){
 server.get('/', function(req,res){
   res.render('index.jade', {
     locals : { 
-              title : 'Your Page Title'
-             ,description: 'Your Page Description'
-             ,author: 'Your Name'
+              title : 'Cheapaholics'
+             ,description: 'E-commerce comparison website'
+             ,author: 'Alejandro Saucedo'
              ,analyticssiteid: 'XXXXXXX' 
             }
   });
