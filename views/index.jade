@@ -9,12 +9,11 @@ block header
             div(id='search-div')
                 form(id='searchbox')
                     input(id='search', placeholder='Find the Best Price!', type='text', name='query')
+                    div#loader
                     input(id='submit', type='submit', value='Submit', disabled="disabled")
 
 
 block content
-    div#container
-        div#id
     div#content
         div#results
             div#receiver
@@ -52,49 +51,3 @@ block content
         div.modal-body
             p One fine body
         div.modal-footer
-
-    script
-        //load loader
-        var loader = {
-
-            width: 100,
-            height: 100,
-
-            stepsPerFrame: 1,
-            trailLength: 1,
-            pointDistance: .02,
-            fps: 30,
-
-            fillColor: '#05E2FF',
-
-            step: function(point, index) {
-
-                this._.beginPath();
-                this._.moveTo(point.x, point.y);
-                this._.arc(point.x, point.y, index * 7, 0, Math.PI*2, false);
-                this._.closePath();
-                this._.fill();
-
-            },
-
-            path: [
-                ['arc', 50, 50, 30, 0, 360]
-            ]
-
-        }
-
-        var d, a, container = document.getElementById('id');
-
-
-        d = document.createElement('div');
-        d.className = 'l';
-
-        a = new Sonic(loader);
-
-        d.appendChild(a.canvas);
-        container.appendChild(d);
-
-        a.canvas.style.marginTop = (150 - a.fullHeight) / 2 + 'px';
-        a.canvas.style.marginLeft = (150 - a.fullWidth) / 2 + 'px';
-
-        a.play();

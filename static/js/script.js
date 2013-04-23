@@ -4,6 +4,7 @@
 $(document).ready(function() {   
 
     var socket = io.connect();
+    var loaderObj, container;
 
     $('#sender').bind('click', function() {
     });
@@ -70,6 +71,8 @@ $(document).ready(function() {
 
         //Re-enabling search button
         $('#submit').removeAttr('disabled');
+        container.style.display = "none";
+        loaderObj.stop();
         disabled = false;
     });
 
@@ -82,6 +85,8 @@ $(document).ready(function() {
             var query = $('#search').val();
 
             socket.emit('query_request', query);
+            loaderObj.play();
+            container.style.display = "block";
         }
 
         return false;
@@ -95,4 +100,42 @@ $(document).ready(function() {
         }
     })
 
+
+    //Adding loader to page
+    var loader = {
+
+        width: 60,
+        height: 60,
+
+        stepsPerFrame: 1,
+        trailLength: 1,
+        pointDistance: .02,
+        fps: 30,
+
+        fillColor: '#05E2FF',
+
+        step: function(point, index) {
+
+            this._.beginPath();
+            this._.moveTo(point.x, point.y);
+            this._.arc(point.x, point.y, index * 7, 0, Math.PI*2, false);
+            this._.closePath();
+            this._.fill();
+
+        },
+
+        path: [
+            ['arc', 30, 20, 15, 0, 360]
+        ]
+
+    }
+
+    container = document.getElementById('loader');
+    loaderObj = new Sonic(loader);
+
+    container.className = 'l';
+
+    container.style.display = "none";
+
+    container.appendChild(loaderObj.canvas);
 });

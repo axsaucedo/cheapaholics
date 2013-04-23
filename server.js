@@ -61,14 +61,20 @@ io.sockets.on('connection', function(socket){
         async.series({
                 ebay: function(callback) {
                     params = {};
+
+                    //Save query to file -- TODO: SAVE IN DATABASE
                     fs.appendFile('queries', query + '\r\n', function (err) {
                         fs.appendFile('errors', err, function (err) {
                              if (err) throw err;
                         });
                         if (err) throw err;
                     });
+
+                    //FILTERING QUERY (Removing symbols, whitespaces, validating it, etc)
+                    //removing symbols
                     query = query.replace(/[^A-Za-z ]/g,'');
-                    params.keywords = query.split(' ').map(function(x) {
+                    //removing whitespaces and single characters - they are replaced with 'undefined' tokens
+                    query = query.split(' ').map(function(x) {
                         if(x.length < 2) {
                             return;
                         }
@@ -77,17 +83,24 @@ io.sockets.on('connection', function(socket){
                         else if (x != '')
                             return x;
                     });
-                    var un = params.keywords.indexOf(undefined);
+                    //Remove all undefined tokens
+                    var un = query.indexOf(undefined);
                     while (un != -1) {
-                        console.log(un);
-                        params.keywords.splice(un, 1);
-                        un = params.keywords.indexOf(undefined)
+//                        console.log(un);
+                        query.splice(un, 1);
+                        un = query.indexOf(undefined)
                     }
+                    //check that query is not empty
+                    if(query < 1) {
+                        return;
+                    }
+
+                    params.keywords = query;
                     params['GLOBAL-ID'] = 'EBAY-GB';
                     params.outputSelector = [ 'AspectHistogram' ];
                     params['paginationInput.entriesPerPage'] = 10;
 
-                    console.log(query);
+//                    console.log(query);
                     console.log(params.keywords);
 
                     filters = {};
